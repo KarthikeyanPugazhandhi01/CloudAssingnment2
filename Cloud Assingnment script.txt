@@ -1,0 +1,423 @@
+gsutil cp gs://mycloudassingnment2dcu1/DownloadIMDBfile.py .
+gsutil cp gs://mycloudassingnment2dcu1/Assingnment2JsonKey.json /home/princekarthi/
+python DownloadIMDBfile.py 
+
+
+# Copy all TSV files to the SourceFile directory
+gsutil -m cp gs://mycloudassingnment2dcu/*.tsv gs://mycloudassingnment2dcu/SourceFile/
+--*/
+gcloud compute instances list
+--gcloud compute project-info add-metadata --metadata-from-file ssh-keys=karthikeyan_pugazhandhi2:/path/to/your/public/key.pub
+gcloud compute ssh cluster-f755-m --zone us-central1-f
+
+
+--Copy all the files to the SourceCodefolder
+gsutil cp gs://mycloudassingnment2dcu1/name.basics.tsv gs://mycloudassingnment2dcu1/SourceCodefolder/
+gsutil cp gs://mycloudassingnment2dcu1/title.akas.tsv gs://mycloudassingnment2dcu1/SourceCodefolder/
+gsutil cp gs://mycloudassingnment2dcu1/title.basics.tsv gs://mycloudassingnment2dcu1/SourceCodefolder/
+gsutil cp gs://mycloudassingnment2dcu1/title.episode.tsv gs://mycloudassingnment2dcu1/SourceCodefolder/
+gsutil cp gs://mycloudassingnment2dcu1/title.principals.tsv gs://mycloudassingnment2dcu1/SourceCodefolder/
+gsutil cp gs://mycloudassingnment2dcu1/title.ratings.tsv gs://mycloudassingnment2dcu1/SourceCodefolder/
+gsutil cp gs://mycloudassingnment2dcu1/title.crew.tsv gs://mycloudassingnment2dcu1/SourceCodefolder/
+
+
+-- Drop tables if they exist
+DROP TABLE IF EXISTS name_basics;
+DROP TABLE IF EXISTS title_akas;
+DROP TABLE IF EXISTS title_basics;
+DROP TABLE IF EXISTS title_episode;
+DROP TABLE IF EXISTS title_principals;
+DROP TABLE IF EXISTS title_ratings;
+DROP TABLE IF EXISTS title_crew;
+
+CREATE TABLE name_basics (
+  nconst STRING,
+  primaryName STRING,
+  birthYear INT,
+  deathYear INT,
+  primaryProfession ARRAY<STRING>,
+  knownForTitles ARRAY<STRING>
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+
+-- Create title_akas Table
+CREATE TABLE title_akas (
+  titleId STRING,
+  ordering INT,
+  title STRING,
+  region STRING,
+  language STRING,
+  types STRING,
+  attributes STRING,
+  isOriginalTitle BOOLEAN
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+-- Create title_basics Table
+CREATE TABLE title_basics (
+  tconst STRING,
+  titleType STRING,
+  primaryTitle STRING,
+  originalTitle STRING,
+  isAdult BOOLEAN,
+  startYear INT,
+  endYear INT,
+  runtimeMinutes INT,
+  genres ARRAY<STRING>
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+-- Create title_episode Table
+CREATE TABLE title_episode (
+  tconst STRING,
+  parentTconst STRING,
+  seasonNumber INT,
+  episodeNumber INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+-- Create title_principals Table
+CREATE TABLE title_principals (
+  tconst STRING,
+  ordering INT,
+  nconst STRING,
+  category STRING,
+  job STRING,
+  characters STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+-- Create title_ratings Table
+CREATE TABLE title_ratings (
+  tconst STRING,
+  averageRating DOUBLE,
+  numVotes INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+-- Create title_crew Table
+CREATE TABLE title_crew (
+  tconst STRING,
+  directors ARRAY<STRING>,
+  writers ARRAY<STRING>
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+
+-- Load data into title_akas Table
+LOAD DATA INPATH 'gs://mycloudassingnment2dcu1/SourceCodefolder/title.akas.tsv' INTO TABLE title_akas;
+
+-- Load data into title_basics Table
+LOAD DATA INPATH 'gs://mycloudassingnment2dcu1/SourceCodefolder/title.basics.tsv' INTO TABLE title_basics;
+
+-- Load data into title_episode Table
+LOAD DATA INPATH 'gs://mycloudassingnment2dcu1/SourceCodefolder/title.episode.tsv' INTO TABLE title_episode;
+
+-- Load data into title_principals Table
+LOAD DATA INPATH 'gs://mycloudassingnment2dcu1/SourceCodefolder/title.principals.tsv' INTO TABLE title_principals;
+
+-- Load data into title_ratings Table
+LOAD DATA INPATH 'gs://mycloudassingnment2dcu1/SourceCodefolder/title.ratings.tsv' INTO TABLE title_ratings;
+
+-- Load data into title_crew Table
+LOAD DATA INPATH 'gs://mycloudassingnment2dcu1/SourceCodefolder/title.crew.tsv' INTO TABLE title_crew;
+
+-- Load data into name_basics Table
+LOAD DATA INPATH 'gs://mycloudassingnment2dcu1/SourceCodefolder/name.basics.tsv' INTO TABLE name_basics;
+
+
+-- Count for name_basics table
+SELECT COUNT(*) FROM name_basics;
+
+-- Count for title_akas table
+SELECT COUNT(*) FROM title_akas;
+
+-- Count for title_basics table
+SELECT COUNT(*) FROM title_basics;
+
+-- Count for title_episode table
+SELECT COUNT(*) FROM title_episode;
+
+-- Count for title_principals table
+SELECT COUNT(*) FROM title_principals;
+
+-- Count for title_ratings table
+SELECT COUNT(*) FROM title_ratings;
+
+-- Count for title_crew table
+SELECT COUNT(*) FROM title_crew;
+
+
+-- Select top 10 from name_basics Table
+SELECT * FROM name_basics LIMIT 10;
+
+-- Select top 10 from title_akas Table
+SELECT * FROM title_akas LIMIT 10;
+
+-- Select top 10 from title_basics Table
+SELECT * FROM title_basics WHERE titleType = 'movie' LIMIT 10; -- title_type = 'movie'
+
+-- Select top 10 from title_episode Table
+SELECT * FROM title_episode LIMIT 10;
+
+-- Select top 10 from title_principals Table
+SELECT * FROM title_principals LIMIT 10;
+
+-- Select top 10 from title_ratings Table
+SELECT * FROM title_ratings LIMIT 10;
+
+-- Select top 10 from title_crew Table
+SELECT * FROM title_crew LIMIT 10;
+
+
+-- Create title_basics Table (filtered for 'movie' titleType)
+CREATE TABLE new_title_basics AS
+SELECT
+  tconst,
+  titleType,
+  primaryTitle,
+  originalTitle,
+  isAdult,
+  startYear,
+  endYear,
+  runtimeMinutes,
+  genres
+FROM
+  title_basics
+WHERE
+  titleType = 'movie';
+
+
+-- Create new_title_akas Table
+CREATE TABLE new_title_akas AS
+SELECT
+  titleid,
+  ordering,
+  title,
+  region,
+  language,
+  types,
+  attributes,
+  isOriginalTitle
+FROM
+  title_akas
+WHERE
+  titleid IN (SELECT tconst FROM new_title_basics);
+
+
+-- Create new_title_principals Table
+CREATE TABLE new_title_principals AS
+SELECT
+  tconst,
+  ordering,
+  nconst,
+  category,
+  job,
+  characters
+FROM
+  title_principals
+WHERE
+  tconst IN (SELECT tconst FROM new_title_basics);
+
+
+-- Create new_title_ratings Table
+CREATE TABLE new_title_ratings AS
+SELECT
+  tconst,
+  averageRating,
+  numVotes
+FROM
+  title_ratings
+WHERE
+  tconst IN (SELECT tconst FROM new_title_basics);
+
+
+-- Create new_title_crew Table
+CREATE TABLE new_title_crew AS
+SELECT
+  tconst,
+  directors,
+  writers
+FROM
+  title_crew
+WHERE
+  tconst IN (SELECT tconst FROM new_title_basics);
+
+
+CREATE TABLE new_name_basics AS
+SELECT
+  nconst,
+  primaryName,
+  birthYear,
+  deathYear,
+  primaryProfession
+FROM
+  name_basics
+
+
+-- Create the fact table
+CREATE TABLE fact_movie_ratings AS
+SELECT
+  tb.tconst AS movie_id,
+  tp.nconst AS person_id,
+  tr.averageRating,
+  tr.numVotes
+FROM
+  new_title_basics tb
+  JOIN new_title_principals tp ON tb.tconst = tp.tconst
+  JOIN new_title_ratings tr ON tb.tconst = tr.tconst;
+
+-- Create dimension table for movies
+CREATE TABLE dim_movies AS
+SELECT
+  tconst AS movie_id,
+  titleType,
+  primaryTitle,
+  originalTitle,
+  isAdult,
+  startYear,
+  endYear,
+  runtimeMinutes,
+  genres
+FROM
+  new_title_basics;
+
+
+
+-- Create a dimension table for individuals (actors, actresses, directors, etc.)
+CREATE TABLE dim_individuals AS
+SELECT
+  nconst AS person_id,
+  primaryName AS person_name,
+  birthYear,
+  deathYear,
+  primaryProfession
+FROM
+  new_name_basics;
+
+
+-- Create dimension table for regions
+CREATE TABLE dim_regions AS
+SELECT DISTINCT
+  titleid AS movie_id,
+  region
+FROM
+  new_title_akas;
+
+-- Create dimension table for languages
+CREATE TABLE dim_languages AS
+SELECT DISTINCT
+  titleid AS movie_id,
+  language
+FROM
+  new_title_akas;
+
+
+
+
+-- Export fact_movie_ratings to a local directory as CSV
+INSERT OVERWRITE LOCAL DIRECTORY '/tmp/fact_movie_ratings_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT * FROM fact_movie_ratings;
+
+--  Export dim_movies to a local directory as CSV
+INSERT OVERWRITE LOCAL DIRECTORY '/tmp/dim_movies_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT * FROM dim_movies;
+
+--   Export dim_individuals to a local directory as CSV
+INSERT OVERWRITE LOCAL DIRECTORY '/tmp/dim_individuals_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT * FROM dim_individuals;
+
+--   Export dim_languages to a local directory as CSV
+INSERT OVERWRITE LOCAL DIRECTORY '/tmp/dim_languages_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT * FROM dim_languages;
+
+--  Export dim_regions to a local directory as CSV
+INSERT OVERWRITE LOCAL DIRECTORY '/tmp/dim_regions_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT * FROM dim_regions;
+
+
+# Consolidate the files into a single CSV file
+cat /tmp/fact_movie_ratings_tmp/* > /tmp/fact_movie_ratings.csv
+
+# Add column headers to the consolidated file
+echo "movie_id,person_id,averageRating,numVotes" | cat - /tmp/fact_movie_ratings.csv > /tmp/fact_movie_ratings_with_headers.csv
+
+# Move the file with headers to GCS
+gsutil cp /tmp/fact_movie_ratings_with_headers.csv gs://outputfileimdb/fact_movie_ratings.csv
+
+# Optionally, clean up the local temporary files
+rm -r /tmp/fact_movie_ratings_tmp /tmp/fact_movie_ratings.csv /tmp/fact_movie_ratings_with_headers.csv
+
+-----------------------------------------------------
+# Consolidate the files into a single CSV file
+cat /tmp/dim_regions_tmp/* > /tmp/dim_regions.csv
+
+# Add column headers to the consolidated file
+echo "movie_id,region" | cat - /tmp/dim_regions.csv > /tmp/dim_regions_with_headers.csv
+
+# Move the file with headers to GCS
+gsutil cp /tmp/dim_regions_with_headers.csv gs://outputfileimdb/dim_regions.csv
+
+# Optionally, clean up the local temporary files
+rm -r /tmp/dim_regions_tmp /tmp/dim_regions.csv /tmp/dim_regions_with_headers.csv
+-----------------------------------------------------------
+# Consolidate the files into a single CSV file
+cat /tmp/dim_movies_tmp/* > /tmp/dim_movies.csv
+
+# Add column headers to the consolidated file
+echo "movie_id,titleType,primaryTitle,originalTitle,isAdult,startYear,endYear,runtimeMinutes,genres" | cat - /tmp/dim_movies.csv > /tmp/dim_movies_with_headers.csv
+
+# Move the file with headers to GCS
+gsutil cp /tmp/dim_movies_with_headers.csv gs://outputfileimdb/dim_movies.csv
+
+# Optionally, clean up the local temporary files
+rm -r /tmp/dim_movies_tmp /tmp/dim_movies.csv /tmp/dim_movies_with_headers.csv
+---------------------------------------------------------
+# Consolidate the files into a single CSV file
+cat /tmp/dim_languages_tmp/* > /tmp/dim_languages.csv
+
+# Add column headers to the consolidated file
+echo "movie_id,language" | cat - /tmp/dim_languages.csv > /tmp/dim_languages_with_headers.csv
+
+# Move the file with headers to GCS
+gsutil cp /tmp/dim_languages_with_headers.csv gs://outputfileimdb/dim_languages.csv
+
+# Optionally, clean up the local temporary files
+rm -r /tmp/dim_languages_tmp /tmp/dim_languages.csv /tmp/dim_languages_with_headers.csv
+-----------------------------------------------------------------------
+# Consolidate the files into a single CSV file
+cat /tmp/dim_individuals_tmp/* > /tmp/dim_individuals.csv
+
+# Add column headers to the consolidated file
+echo "person_id,person_name,birthYear,deathYear,primaryProfession1,primaryProfession2,primaryProfession3,knownForTitles" | cat - /tmp/dim_individuals.csv > /tmp/dim_individuals_with_headers.csv
+
+# Move the file with headers to GCS
+gsutil cp /tmp/dim_individuals_with_headers.csv gs://outputfileimdb/dim_individuals.csv
+
+# Optionally, clean up the local temporary files
+rm -r /tmp/dim_individuals_tmp /tmp/dim_individuals.csv /tmp/dim_individuals_with_headers.csv
